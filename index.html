@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>canvas-draw-mousemove-arrow</title>
+  <style>
+    .father {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      width: 100%;
+      overflow: auto;
+      flex-wrap: nowrap;
+      box-sizing: border-box;
+      padding: 10px;
+    }
+
+    .children {
+      box-sizing: border-box;
+      width: 100%;
+      height: 100px;
+      flex: 0 0 auto;
+      /* 禁止子元素收缩 */
+      background-color: aqua;
+      border-right: 2px solid red;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const height = window.screen.height;
+    const width = window.screen.width;
+    const canvas = document.getElementById('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    let startMove = false;
+    let startDot = {
+      x: 0,
+      y: 0,
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      startMove = true;
+      startDot = {
+        x: e.x,
+        y: e.y,
+      }
+    })
+    canvas.addEventListener('mouseup', (e) => {
+      startMove = false;
+      startDot = {
+        x: 0,
+        y: 0,
+      }
+    })
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!startMove) return;
+      endDot = {
+        x: e.x,
+        y: e.y,
+      }
+      drawArrowFn(startDot, endDot);
+    })
+
+    function drawArrowFn (startDot, endDot) {
+      const ctx = canvas.getContext('2d');
+      const options = drawArrow(startDot, endDot);
+      ctx.clearRect(0, 0, width, height);
+      ctx.beginPath();
+      options.forEach((item, index) => {
+        const isLast = index === options.length - 1;
+        if (index === 0) {
+          ctx.moveTo(options[0].x, options[0].y);
+        } else {
+          const willX = options[index].x;
+          const willY = options[index].y;
+          ctx.lineTo(willX, willY);
+          if (isLast) {
+            ctx.lineTo(options[0].x, options[0].y);
+          }
+        }
+      })
+      ctx.closePath(); // 可选，闭合路径
+      ctx.fillStyle = 'red';
+      ctx.fill();
+  
+      function drawArrow(startDot, endDot, arcLength = 6, arrowXiebian = 14 ) {
+        function calculateIntersectionPoint(Px, Py) {
+  
+          // Calculate the angle of the line OP
+          const angleOP = Math.atan2(Py, Px);
+  
+          // Calculate the coordinates of point C
+          const Cx = arrowXiebian * Math.cos(angleOP - (arcLength / 14));
+          const Cy = arrowXiebian * Math.sin(angleOP - (arcLength / 14));
+  
+          // Calculate the coordinates of point D
+          const Dx = arrowXiebian * Math.cos(angleOP + (arcLength / 14));
+          const Dy = arrowXiebian * Math.sin(angleOP + (arcLength / 14));
+  
+          return {
+            C: {
+              x: Cx,
+              y: Cy
+            },
+            D: {
+              x: Dx,
+              y: Dy
+            }
+          };
+        }
+  
+        function calculateMidpoints(Cx, Cy, Dx, Dy) {
+  
+          // Calculate the coordinates of point B (midpoint of CD)
+          const Bx = (2 * Cx + Dx) / 3;
+          const By = (2 * Cy + Dy) / 3;
+  
+          // Calculate the coordinates of point E (midpoint of CD)
+          const Ex = (Cx + 2 * Dx) / 3;
+          const Ey = (Cy + 2 * Dy) / 3;
+  
+          return {
+            B: {
+              x: Bx,
+              y: By
+            },
+            E: {
+              x: Ex,
+              y: Ey
+            }
+          };
+        }
+  
+        const xiangX = startDot.x - endDot.x;
+        const xiangY = startDot.y - endDot.y;
+        const res = calculateIntersectionPoint(xiangX, xiangY);
+        const CDDOT = calculateMidpoints(res.C.x, res.C.y, res.D.x, res.D.y);
+  
+        const DotC = {
+          x: res.C.x + endDot.x,
+          y: res.C.y + endDot.y,
+        };
+        const DotD = {
+          x: res.D.x + endDot.x,
+          y: res.D.y + endDot.y,
+        };
+  
+        const DotB = {
+          x: CDDOT.B.x + endDot.x,
+          y: CDDOT.B.y + endDot.y,
+        }
+  
+        const DotE = {
+          x: CDDOT.E.x + endDot.x,
+          y: CDDOT.E.y + endDot.y,
+        }
+  
+        const DotO = startDot;
+        const DotP = endDot;
+  
+        return [DotO, DotB, DotC, DotP, DotD, DotE];
+      }
+    }
+
+
+  </script>
+</body>
+
+</html>
